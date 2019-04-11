@@ -21,12 +21,9 @@ class PiWheelsDatabase:
 
     def count_downloads_yesterday(self):
         query = """
-        SELECT
-            COUNT(*)
-        FROM
-            downloads
-        WHERE
-            accessed_at::date = date %s
+        SELECT COUNT(*)
+        FROM downloads
+        WHERE accessed_at::date = date %s
         """
         values = (yesterday, )
         with self.conn:
@@ -36,12 +33,9 @@ class PiWheelsDatabase:
 
     def count_downloads_last_month(self):
         query = """
-        SELECT
-            COUNT(*)
-        FROM
-            downloads
-        WHERE
-            accessed_at::date BETWEEN date %s AND date %s
+        SELECT COUNT(*)
+        FROM downloads
+        WHERE accessed_at::date BETWEEN date %s AND date %s
         """
         values = (first_of_last_month, end_of_last_month)
         with self.conn:
@@ -49,11 +43,10 @@ class PiWheelsDatabase:
                 cur.execute(query, values)
                 return cur.fetchone()[0]
 
-	def get_time_saved_yesterday(self):
+    def get_time_saved_yesterday(self):
         query = """
-                SELECT SUM(
+        SELECT SUM(
             CASE f.platform_tag
-                WHEN 'linux_armv7l' THEN 1
                 WHEN 'linux_armv6l' THEN 6
                 ELSE 0
             END *
@@ -62,12 +55,11 @@ class PiWheelsDatabase:
                 ELSE INTERVAL '0'
             END
         ) AS time_saved
-                FROM
-                        downloads d
+        FROM downloads d
         JOIN files f ON d.filename = f.filename
         JOIN builds b ON b.build_id = f.build_id
-                WHERE f.abi_tag <> 'none'
-                AND accessed_at::date = date %s;
+        WHERE f.abi_tag <> 'none'
+        AND accessed_at::date = date %s;
         """
         values = (yesterday, )
         with self.conn:
@@ -75,9 +67,9 @@ class PiWheelsDatabase:
                 cur.execute(query, values)
                 return cur.fetchone()[0]
 
-	def get_time_saved_last_month(self):
+    def get_time_saved_last_month(self):
         query = """
-                SELECT SUM(
+        SELECT SUM(
             CASE f.platform_tag
                 WHEN 'linux_armv7l' THEN 1
                 WHEN 'linux_armv6l' THEN 6
@@ -88,15 +80,24 @@ class PiWheelsDatabase:
                 ELSE INTERVAL '0'
             END
         ) AS time_saved
-                FROM
-                        downloads d
+        FROM downloads d
         JOIN files f ON d.filename = f.filename
         JOIN builds b ON b.build_id = f.build_id
-                WHERE f.abi_tag <> 'none'
-                AND accessed_at::date BETWEEN date %s AND date %s
+        WHERE f.abi_tag <> 'none'
+        AND accessed_at::date BETWEEN date %s AND date %s
         """
         values = (first_of_last_month, end_of_last_month)
         with self.conn:
             with self.conn.cursor() as cur:
                 cur.execute(query, values)
+                return cur.fetchone()[0]
+
+    def get_downloads_count(self):
+        query = """
+        SELECT COUNT(*)
+        FROM downloads
+        """
+        with self.conn:
+            with self.conn.cursor() as cur:
+                cur.execute(query)
                 return cur.fetchone()[0]

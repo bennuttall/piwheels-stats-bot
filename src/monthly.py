@@ -11,7 +11,7 @@ tweet = ('Last month, {:,} packages were downloaded from piwheels.org, '
          'saving users over {:,} years of build time').format(downloads, years)
 
 if downloads and time_saved:
-    print(f'Tweeting: {tweet}')
+    print('Tweeting: {}'.format(tweet))
     twitter.update_status(status=tweet)
 else:
-    print(f'Not tweeting: {tweet}')
+    print('Not tweeting: {}'.format(tweet))
