@@ -3,7 +3,7 @@ from psycopg2.extras import DictCursor
 from datetime import date, datetime, timedelta
 
 interval_type = psycopg2.extensions.new_type(psycopg2.extensions.INTERVAL.values,
-								    'INTERVAL_STR', psycopg2.STRING)
+                                             'INTERVAL_STR', psycopg2.STRING)
 
 def get_last_month_period():
     this_first = date(now.year, now.month, 1)
