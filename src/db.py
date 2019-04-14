@@ -2,6 +2,9 @@ import psycopg2
 from psycopg2.extras import DictCursor
 from datetime import date, datetime, timedelta
 
+interval_type = psycopg2.extensions.new_type(psycopg2.extensions.INTERVAL.values,
+								    'INTERVAL_STR', psycopg2.STRING)
+
 def get_last_month_period():
     this_first = date(now.year, now.month, 1)
     prev_end = this_first - timedelta(days=1)
@@ -45,8 +48,9 @@ class PiWheelsDatabase:
 
     def get_time_saved_yesterday(self):
         query = """
-        SELECT SUM(
+        SELECT JUSTIFY_INTERVAL(SUM(
             CASE f.platform_tag
+                WHEN 'linux_armv7l' THEN 1
                 WHEN 'linux_armv6l' THEN 6
                 ELSE 0
             END *
@@ -54,7 +58,7 @@ class PiWheelsDatabase:
                 THEN b.duration - INTERVAL '6.7 seconds'
                 ELSE INTERVAL '0'
             END
-        ) AS time_saved
+        )) AS time_saved
         FROM downloads d
         JOIN files f ON d.filename = f.filename
         JOIN builds b ON b.build_id = f.build_id
@@ -69,7 +73,7 @@ class PiWheelsDatabase:
 
     def get_time_saved_last_month(self):
         query = """
-        SELECT SUM(
+        SELECT JUSTIFY_INTERVAL(SUM(
             CASE f.platform_tag
                 WHEN 'linux_armv7l' THEN 1
                 WHEN 'linux_armv6l' THEN 6
@@ -79,7 +83,7 @@ class PiWheelsDatabase:
                 THEN b.duration - INTERVAL '6.7 seconds'
                 ELSE INTERVAL '0'
             END
-        ) AS time_saved
+        )) AS time_saved
         FROM downloads d
         JOIN files f ON d.filename = f.filename
         JOIN builds b ON b.build_id = f.build_id
@@ -89,6 +93,7 @@ class PiWheelsDatabase:
         values = (first_of_last_month, end_of_last_month)
         with self.conn:
             with self.conn.cursor() as cur:
+                psycopg2.extensions.register_type(interval_type, cur)
                 cur.execute(query, values)
                 return cur.fetchone()[0]
 
