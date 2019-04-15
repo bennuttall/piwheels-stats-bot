@@ -23,6 +23,6 @@ tweet = ('Last month, {:,} packages were downloaded from piwheels.org, '
 
 try:
     logger.info('Tweeting: {}'.format(tweet))
-    #twitter.update_status(status=tweet)
+    twitter.update_status(status=tweet)
 except Exception as e:
     logger.error('{}: {}'.format(e.__class__.__name__, e))
