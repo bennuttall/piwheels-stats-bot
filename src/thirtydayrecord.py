@@ -2,7 +2,7 @@ from logzero import logger, logfile
 from db import PiWheelsDatabase
 import math
 
-logfile('/var/log/piwheels-twitter/millions.log', maxBytes=1e6)
+logfile('/var/log/piwheels-twitter/thirtydayrecord.log', maxBytes=1e6)
 logger.info('START')
 
 try:
@@ -13,30 +13,30 @@ except Exception as e:
 
 db = PiWheelsDatabase()
 
-def get_downloads_last_count():
-    with open('/home/piwheels/downloads.txt', 'r') as f:
+def get_last_milestone():
+    with open('/home/piwheels/downloads30.txt', 'r') as f:
         return int(f.readline())
 
 def update_downloads_last_count(downloads):
-    with open('/home/piwheels/downloads.txt', 'w') as f:
+    with open('/home/piwheels/downloads30.txt', 'w') as f:
         f.write('{}'.format(downloads))
 
 def roundup(n):
-    million = 1e6
-    return int(math.ceil(n / million) * million)
+    hund_thou = 1e5
+    return int(math.ceil(n / hund_thou) * hund_thou)
 
-downloads_last_count = get_downloads_last_count()
-logger.debug('last count: {}'.format(downloads_last_count))
-next_milestone = roundup(downloads_last_count)
+last_milestone = get_last_milestone()
+logger.debug('last milestone: {}'.format(last_milestone))
+next_milestone = roundup(last_milestone + 1)
 logger.debug('next milestone: {}'.format(next_milestone))
-downloads_now = db.get_downloads_count()
+downloads_now = db.get_downloads_last_30_days()
 logger.debug('downloads now: {}'.format(downloads_now))
 
 if downloads_now >= next_milestone:
-    tweet = 'Now passed {:,} downloads from piwheels.org'.format(next_milestone)
+    tweet = 'Now passed {:,} downloads in 30 days from piwheels.org'.format(next_milestone)
     logger.info('Tweeting: {}'.format(tweet))
     twitter.update_status(status=tweet)
+    update_downloads_last_count(next_milestone)
 else:
     logger.info('Not tweeting: {:,} < {:,}'.format(downloads_now, next_milestone))
 
-update_downloads_last_count(downloads_now)
