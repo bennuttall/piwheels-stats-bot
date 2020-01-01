@@ -41,7 +41,10 @@ next_milestone = roundup(years_saved_prev)
 logger.debug('next milestone: {}'.format(next_milestone))
 time_saved_now = db.get_time_saved_in_year(year)
 logger.debug('time saved now: {}'.format(time_saved_now))
-years_saved = int(time_saved_now.split()[0])
+if 'years' in time_saved_now:
+    years_saved = int(time_saved_now.split()[0])
+else:
+    years_saved = 0
 
 if years_saved >= next_milestone:
     tweet = 'So far in {}, piwheels.org has now saved over {} years of build time'.format(year, next_milestone)
