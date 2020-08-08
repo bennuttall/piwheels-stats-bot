@@ -9,10 +9,11 @@ def get_last_month_period():
     this_first = date(now.year, now.month, 1)
     prev_end = this_first - timedelta(days=1)
     prev_first = date(prev_end.year, prev_end.month, 1)
-    return prev_first, prev_end
+    return (prev_first, prev_end)
 
 now = datetime.now()
-yesterday = (now - timedelta(1)).strftime('%Y-%m-%d')
+yesterday_dt = now - timedelta(days=1)
+yesterday = yesterday_dt.strftime('%Y-%m-%d')
 first_of_last_month, end_of_last_month = get_last_month_period()
 
 class PiWheelsDatabase:
@@ -69,7 +70,7 @@ class PiWheelsDatabase:
         with self.conn:
             with self.conn.cursor() as cur:
                 cur.execute(query, values)
-                return cur.fetchone()[0]
+                return cur.fetchone()[0].days
 
     def get_time_saved_last_month(self):
         query = """
@@ -167,3 +168,21 @@ class PiWheelsDatabase:
                 psycopg2.extensions.register_type(interval_type, cur)
                 cur.execute(query, (year - 1,))
                 return cur.fetchone()[0]
+
+    def get_downloads_in_last_week(self):
+        query = """
+        SELECT accessed_at::date AS day, COUNT(*) AS downloads
+        FROM downloads
+        WHERE accessed_at::date BETWEEN %s AND %s
+        GROUP BY day
+        ORDER BY day
+        """
+        day_1 = (yesterday_dt - timedelta(days=6)).strftime('%Y-%m-%d')
+        with self.conn:
+            with self.conn.cursor() as cur:
+                cur.execute(query, (day_1, yesterday))
+                results = cur.fetchall()
+        return [
+            (day.strftime('%a'), num)
+            for day, num in results
+        ]
