@@ -21,6 +21,7 @@ def update_record(record_file, data):
         f.write(str(data))
 
 def make_week_downloads_graph():
+    logger.info('Making graph')
     downloads_last_week = db.get_downloads_in_last_week()
     days = [d[0] for d in downloads_last_week]
     downloads = [d[1] for d in downloads_last_week]
@@ -31,7 +32,7 @@ def make_week_downloads_graph():
     plt.xticks(range(7), days)
     week_avg = statistics.mean(downloads)
     ax.plot([0, 6], [record_downloads, record_downloads], "r--", label="Record")
-    ax.plot([0, 6], [week_avg, week_avg], "k--", label="Week average")
+    ax.plot([0, 6], [week_avg, week_avg], "k--", label="Daily average")
     ax.legend()
 
     img = io.BytesIO()
@@ -40,6 +41,7 @@ def make_week_downloads_graph():
     return img
 
 def send_tweet(tweet, graph):
+    logger.info('Uploading graph')
     response = twitter.upload_media(media=graph)
     media_ids = [response['media_id']]
 
@@ -82,7 +84,5 @@ tweet = ('Yesterday, {:,} packages were downloaded from piwheels.org{}, '
          'saving users over {} days{} of build time').format(
          downloads, downloads_record, time_saved, time_saved_record)
 
-logger.info('Making graph')
 graph = make_week_downloads_graph()
-logger.info('Uploading graph')
 send_tweet(tweet, graph)
