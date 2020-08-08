@@ -186,3 +186,22 @@ class PiWheelsDatabase:
             (day.strftime('%a'), num)
             for day, num in results
         ]
+
+    def get_downloads_in_last_month(self):
+        query = """
+        SELECT accessed_at::date AS day, COUNT(*) AS downloads
+        FROM downloads
+        WHERE accessed_at::date BETWEEN %s AND %s
+        GROUP BY day
+        ORDER BY day
+        """
+        first = first_of_last_month.strftime('%Y-%m-%d')
+        last = end_of_last_month.strftime('%Y-%m-%d')
+        with self.conn:
+            with self.conn.cursor() as cur:
+                cur.execute(query, (first, last))
+                results = cur.fetchall()
+        return [
+            (day.strftime('%-d'), num)
+            for day, num in results
+        ]
